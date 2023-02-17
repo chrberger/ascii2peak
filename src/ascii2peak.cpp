@@ -370,13 +370,9 @@ int32_t main(int32_t argc, char **argv) {
 
                 std::string frameID = stringtoolbox::split(tokens.at(2), '#').at(0);
 
+                // Flip CAN data.
                 std::string rdata = stringtoolbox::split(tokens.at(2), '#').at(1);
                 uint8_t len = rdata.length();
-
-                union _data {
-                  uint64_t u64 = 0;
-                  uint8_t b8[sizeof(uint64_t)];
-                } ui_data;
 
                 std::vector<char> __data;
                 __data.resize(len);
@@ -389,35 +385,19 @@ int32_t main(int32_t argc, char **argv) {
                 }
                 const std::string data(__data.begin(), __data.end());
 
-                std::stringstream sstr;
-                uint64_t a = 0;
-                sstr << std::hex << data;
-                sstr >> a;
-                ui_data.u64 = a;
+                std::stringstream sstrData;
+                sstrData << std::hex << data;
 
-                std::cout << "rd = " << rdata << ", d = " << data << ", ui = " << ui_data.u64 << ", a = " << a << ", ah = " << std::hex << a << std::dec << std::endl;
+                union _data {
+                  uint64_t u64 = 0;
+                  uint8_t b8[sizeof(uint64_t)];
+                } ui_data;
+                sstrData >> ui_data.u64;
 
-                //for (auto it = data.begin(); it != data.end(); it += 2) {
-                //    std::swap(it[0], it[1]);
-                //}
-
-/*
-                frameID = "622";
-                data = "9C182F4239004E";
-                std::string xdata(data.rbegin(), data.rend());
-                for (auto it = xdata.begin(); it != xdata.end(); it += 2) {
-                    std::swap(it[0], it[1]);
-                }
-                std::string data2 = "4E0039422F189C";
-                std::cout << "d2: "<< data2 << ", xd: " << xdata << std::endl;
-*/                
                 uint16_t ui_frameID = 0;
-                std::sscanf(frameID.c_str(), "%x", &ui_frameID);
-
-                //std::sscanf(data.c_str(), "%lx", &ui_data.u64);
-                //ui_data.u64 = std::strtoul(data.c_str(), NULL, 16);
-
-                std::cout << "rd = " << rdata << ", d = " << data << std::endl;
+                std::stringstream sstrFrameID;
+                sstrFrameID << std::hex << frameID;
+                sstrFrameID >> ui_frameID;
 
                 std::cout << time << ": r=" << rdata << ", d=" << data<< ", " << ui_frameID << ":" << ui_data.u64 << ", " << +len << std::endl;
 
