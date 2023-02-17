@@ -19,15 +19,6 @@
 #include "opendlv-standard-message-set.hpp"
 #include "peak_can.hpp"
 
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-
-#ifdef __linux__
-    #include <linux/if.h>
-    #include <linux/can.h>
-#endif
-
 #include <unistd.h>
 
 #include <cerrno>
@@ -51,11 +42,7 @@ int32_t main(int32_t argc, char **argv) {
         std::cerr << "Example: " << argv[0] << " --cid=111 --can=can0 --verbose" << std::endl;
     }
     else {
-        const std::string CANDEVICE{commandlineArguments["can"]};
-        const uint32_t ID{(commandlineArguments["id"].size() != 0) ? static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
         const bool VERBOSE{commandlineArguments.count("verbose") != 0};
-
-        cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
 
         // Delegate to convert incoming CAN frames into ODVD messages that are broadcast into the OD4Session.
         std::mutex msgAVRMutex;
@@ -67,7 +54,7 @@ int32_t main(int32_t argc, char **argv) {
         std::mutex msgDelusionMutex;
         opendlv::device::gps::peak::Delusion msgDelusion;
 
-        auto decode = [&od4, VERBOSE, ID, &msgAVRMutex, &msgAVR, &msgWGS84RMutex, &msgDelusionMutex, &msgDelusion, &msgWGS84R](cluon::data::TimeStamp ts, uint16_t canFrameID, uint8_t *src, uint8_t len) {
+        auto decode = [VERBOSE, &msgAVRMutex, &msgAVR, &msgWGS84RMutex, &msgDelusionMutex, &msgDelusion, &msgWGS84R](cluon::data::TimeStamp ts, uint16_t canFrameID, uint8_t *src, uint8_t len) {
             if ( (nullptr == src) || (0 == len) ) return;
             if (PEAK_CAN_GPS_COURSE_SPEED_FRAME_ID == canFrameID) {
                 peak_can_gps_course_speed_t tmp;
@@ -82,7 +69,7 @@ int32_t main(int32_t argc, char **argv) {
                                        []() {});
                             std::cout << sstr.str() << std::endl;
                         }
-                        od4.send(msg, ts, ID);
+                        //od4.send(msg, ts, ID);
                     }
 
                     {
@@ -95,7 +82,7 @@ int32_t main(int32_t argc, char **argv) {
                                        []() {});
                             std::cout << sstr.str() << std::endl;
                         }
-                        od4.send(msg, ts, ID);
+                        //od4.send(msg, ts, ID);
                     }
                 }
             }
@@ -112,7 +99,7 @@ int32_t main(int32_t argc, char **argv) {
                                        []() {});
                             std::cout << sstr.str() << std::endl;
                         }
-                        od4.send(msg, ts, ID);
+                        //od4.send(msg, ts, ID);
                     }
 
                     const float mG_to_mps2{9.80665f/1000.f};
@@ -130,7 +117,7 @@ int32_t main(int32_t argc, char **argv) {
                                        []() {});
                             std::cout << sstr.str() << std::endl;
                         }
-                        od4.send(msg, ts, ID);
+                        //od4.send(msg, ts, ID);
                     }
 
                     {
@@ -145,7 +132,7 @@ int32_t main(int32_t argc, char **argv) {
                                        []() {});
                             std::cout << sstr.str() << std::endl;
                         }
-                        od4.send(msg, ts, ID);
+                        //od4.send(msg, ts, ID);
                     }
                 }
             }
@@ -164,7 +151,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msg, ts, ID);
+                    //od4.send(msg, ts, ID);
                 }
             }
             else if (PEAK_CAN_L3_GD20_ROTATION_A_FRAME_ID == canFrameID) {
@@ -196,7 +183,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msgAVR, ts, ID);
+                    //od4.send(msgAVR, ts, ID);
                 }
             }
             else if (PEAK_CAN_GPS_POSITION_LATITUDE_FRAME_ID == canFrameID) {
@@ -243,7 +230,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msgWGS84R, ts, ID);
+                    //od4.send(msgWGS84R, ts, ID);
                 }
             }
             else if (PEAK_CAN_GPS_POSITION_ALTITUDE_FRAME_ID == canFrameID) {
@@ -258,7 +245,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msg, ts, ID);
+                    //od4.send(msg, ts, ID);
                 }
             }
             else if (PEAK_CAN_GPS_DELUSIONS_A_FRAME_ID == canFrameID) {
@@ -290,7 +277,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msgDelusion, ts, ID);
+                    //od4.send(msgDelusion, ts, ID);
                 }
             }
             else if (PEAK_CAN_GPS_STATUS_FRAME_ID == canFrameID) {
@@ -307,7 +294,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msg, ts, ID);
+                    //od4.send(msg, ts, ID);
                 }
             }
             else if (PEAK_CAN_IO_FRAME_ID == canFrameID) {
@@ -327,7 +314,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msg, ts, ID);
+                    //od4.send(msg, ts, ID);
                 }
             }
             else if (PEAK_CAN_RTC_DATE_TIME_FRAME_ID == canFrameID) {
@@ -348,7 +335,7 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msg, ts, ID);
+                    //od4.send(msg, ts, ID);
                 }
             }
             else if (PEAK_CAN_GPS_DATE_TIME_FRAME_ID == canFrameID) {
@@ -368,97 +355,84 @@ int32_t main(int32_t argc, char **argv) {
                                    []() {});
                         std::cout << sstr.str() << std::endl;
                     }
-                    od4.send(msg, ts, ID);
+                    //od4.send(msg, ts, ID);
                 }
             }
 
         };
 
-#ifdef __linux__
-        struct sockaddr_can address;
-#endif
-        int socketCAN;
+        do {
+            std::string line;
+            std::getline(std::cin, line);
+            if (line.length() > 0) {
+                std::vector<std::string> tokens = stringtoolbox::split(line, ' ');
+                std::string time = stringtoolbox::split(tokens.at(0).substr(1), ')').at(0);
 
-        std::cerr << "[opendlv-device-gps-peak] Opening " << CANDEVICE << "... ";
-#ifdef __linux__
-        // Create socket for SocketCAN.
-        socketCAN = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-        if (socketCAN < 0) {
-            std::cerr << "failed." << std::endl;
+                std::string frameID = stringtoolbox::split(tokens.at(2), '#').at(0);
 
-            std::cerr << "[opendlv-device-gps-peak] Error while creating socket: " << strerror(errno) << std::endl;
-        }
+                std::string rdata = stringtoolbox::split(tokens.at(2), '#').at(1);
+                uint8_t len = rdata.length();
 
-        // Try opening the given CAN device node.
-        struct ifreq ifr;
-        memset(&ifr, 0, sizeof(ifr));
-        strcpy(ifr.ifr_name, CANDEVICE.c_str());
-        if (0 != ioctl(socketCAN, SIOCGIFINDEX, &ifr)) {
-            std::cerr << "failed." << std::endl;
+                union _data {
+                  uint64_t u64 = 0;
+                  uint8_t b8[sizeof(uint64_t)];
+                } ui_data;
 
-            std::cerr << "[opendlv-device-gps-peak] Error while getting index for " << CANDEVICE << ": " << strerror(errno) << std::endl;
-            return retCode;
-        }
+                std::vector<char> __data;
+                __data.resize(len);
+                int i = len;
+                int j = 0;
+                for(; i >= 2; i-=2) {
+                  __data[j] = rdata[i-2];
+                  __data[j+1] = rdata[i-1];
+                  j+=2;
+                }
+                const std::string data(__data.begin(), __data.end());
 
-        // Setup address and port.
-        memset(&address, 0, sizeof(address));
-        address.can_family = AF_CAN;
-        address.can_ifindex = ifr.ifr_ifindex;
+                std::stringstream sstr;
+                uint64_t a = 0;
+                sstr << std::hex << data;
+                sstr >> a;
+                ui_data.u64 = a;
 
-        if (bind(socketCAN, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)) < 0) {
-            std::cerr << "failed." << std::endl;
+                std::cout << "rd = " << rdata << ", d = " << data << ", ui = " << ui_data.u64 << ", a = " << a << ", ah = " << std::hex << a << std::dec << std::endl;
 
-            std::cerr << "[opendlv-device-gps-peak] Error while binding socket: " << strerror(errno) << std::endl;
-            return retCode;
-        }
-        std::cerr << "done." << std::endl;
-#else
-        std::cerr << "failed (SocketCAN not available on this platform). " << std::endl;
-        return retCode;
-#endif
+                //for (auto it = data.begin(); it != data.end(); it += 2) {
+                //    std::swap(it[0], it[1]);
+                //}
 
-#ifdef __linux__
-        struct can_frame frame;
-        fd_set rfds;
-#endif
-        struct timeval timeout;
-        struct timeval socketTimeStamp;
-        int32_t nbytes = 0;
+/*
+                frameID = "622";
+                data = "9C182F4239004E";
+                std::string xdata(data.rbegin(), data.rend());
+                for (auto it = xdata.begin(); it != xdata.end(); it += 2) {
+                    std::swap(it[0], it[1]);
+                }
+                std::string data2 = "4E0039422F189C";
+                std::cout << "d2: "<< data2 << ", xd: " << xdata << std::endl;
+*/                
+                uint16_t ui_frameID = 0;
+                std::sscanf(frameID.c_str(), "%x", &ui_frameID);
 
-        while (od4.isRunning() && socketCAN > -1) {
-#ifdef __linux__
-            timeout.tv_sec = 1;
-            timeout.tv_usec = 0;
+                //std::sscanf(data.c_str(), "%lx", &ui_data.u64);
+                //ui_data.u64 = std::strtoul(data.c_str(), NULL, 16);
 
-            FD_ZERO(&rfds);
-            FD_SET(socketCAN, &rfds);
+                std::cout << "rd = " << rdata << ", d = " << data << std::endl;
 
-            select(socketCAN + 1, &rfds, NULL, NULL, &timeout);
+                std::cout << time << ": r=" << rdata << ", d=" << data<< ", " << ui_frameID << ":" << ui_data.u64 << ", " << +len << std::endl;
 
-            if (FD_ISSET(socketCAN, &rfds)) {
-                nbytes = read(socketCAN, &frame, sizeof(struct can_frame));
-                if ( (nbytes > 0) && (nbytes == sizeof(struct can_frame)) ) {
-                    // Get receiving time stamp.
-                    if (0 != ioctl(socketCAN, SIOCGSTAMP, &socketTimeStamp)) {
-                        // In case the ioctl failed, use traditional vsariant.
-                        cluon::data::TimeStamp now{cluon::time::now()};
-                        socketTimeStamp.tv_sec = now.seconds();
-                        socketTimeStamp.tv_usec = now.microseconds();
-                    }
+        //auto decode = [VERBOSE, &msgAVRMutex, &msgAVR, &msgWGS84RMutex, &msgDelusionMutex, &msgDelusion, &msgWGS84R](cluon::data::TimeStamp ts, uint16_t canFrameID, uint8_t *src, uint8_t len) {
+                cluon::data::TimeStamp ts;
+                decode(ts, ui_frameID, ui_data.b8, len/2);
+            }
+        } while (std::cin.good());
+
+/*
                     cluon::data::TimeStamp sampleTimeStamp;
                     sampleTimeStamp.seconds(socketTimeStamp.tv_sec)
                                    .microseconds(socketTimeStamp.tv_usec);
-                    decode(sampleTimeStamp, frame.can_id, frame.data, frame.can_dlc);
-                }
-            }
-#endif
-        }
-
-        std::clog << "[opendlv-device-gps-peak] Closing " << CANDEVICE << "... ";
-        if (socketCAN > -1) {
-            close(socketCAN);
-        }
-        std::clog << "done." << std::endl;
+*/
+            //        decode(sampleTimeStamp, frame.can_id, frame.data, frame.can_dlc);
 
         retCode = 0;
     }
