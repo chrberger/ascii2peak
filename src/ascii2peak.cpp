@@ -34,14 +34,14 @@
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
-    if ( (0 == commandlineArguments.count("cid")) ) {
+    if ( (1 == commandlineArguments.count("help")) ) {
         std::cerr << argv[0] << " translates messages from CAN to ODVD messages for PEAK CAN GPS." << std::endl;
-        std::cerr << "Usage:   " << argv[0] << " --cid=<OD4 session> [--id=ID] --can=<name of the CAN device> [--verbose]" << std::endl;
-        std::cerr << "         --cid:    CID of the OD4Session to send and receive messages" << std::endl;
-        std::cerr << "         --id:     ID to use as senderStamp for sending" << std::endl;
-        std::cerr << "Example: " << argv[0] << " --cid=111 --can=can0 --verbose" << std::endl;
+        std::cerr << "Usage:   " << argv[0] << " [--id=ID] [--verbose]" << std::endl;
+        std::cerr << "         --id:     ID to use as senderStamp for encoding" << std::endl;
+        std::cerr << "Example: " << argv[0] << " --id=1 --verbose" << std::endl;
     }
     else {
+        const uint32_t ID{(commandlineArguments["id"].size() != 0) ? static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
         const bool VERBOSE{commandlineArguments.count("verbose") != 0};
 
         // Delegate to convert incoming CAN frames into ODVD messages that are broadcast into the OD4Session.
@@ -54,7 +54,7 @@ int32_t main(int32_t argc, char **argv) {
         std::mutex msgDelusionMutex;
         opendlv::device::gps::peak::Delusion msgDelusion;
 
-        auto decode = [VERBOSE, &msgAVRMutex, &msgAVR, &msgWGS84RMutex, &msgDelusionMutex, &msgDelusion, &msgWGS84R](cluon::data::TimeStamp ts, uint16_t canFrameID, uint8_t *src, uint8_t len) {
+        auto decode = [ID, VERBOSE, &msgAVRMutex, &msgAVR, &msgWGS84RMutex, &msgDelusionMutex, &msgDelusion, &msgWGS84R](cluon::data::TimeStamp ts, uint16_t canFrameID, uint8_t *src, uint8_t len) {
             if ( (nullptr == src) || (0 == len) ) return;
             if (PEAK_CAN_GPS_COURSE_SPEED_FRAME_ID == canFrameID) {
                 peak_can_gps_course_speed_t tmp;
@@ -67,9 +67,21 @@ int32_t main(int32_t argc, char **argv) {
                             msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                        [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                        []() {});
-                            std::cout << sstr.str() << std::endl;
+                            std::clog << sstr.str() << std::endl;
                         }
                         //od4.send(msg, ts, ID);
+                        cluon::data::Envelope env;
+                        env.senderStamp(ID)
+                           .sent(ts)
+                           .received(ts)
+                           .sampleTimeStamp(ts);
+                        cluon::ToProtoVisitor proto;
+            
+                        env.dataType(msg.ID());
+                        msg.accept(proto);
+                        env.serializedData(proto.encodedData());
+                        std::cout << cluon::serializeEnvelope(std::move(env));
+                        std::cout.flush();
                     }
 
                     {
@@ -80,9 +92,21 @@ int32_t main(int32_t argc, char **argv) {
                             msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                        [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                        []() {});
-                            std::cout << sstr.str() << std::endl;
+                            std::clog << sstr.str() << std::endl;
                         }
                         //od4.send(msg, ts, ID);
+                        cluon::data::Envelope env;
+                        env.senderStamp(ID)
+                           .sent(ts)
+                           .received(ts)
+                           .sampleTimeStamp(ts);
+                        cluon::ToProtoVisitor proto;
+            
+                        env.dataType(msg.ID());
+                        msg.accept(proto);
+                        env.serializedData(proto.encodedData());
+                        std::cout << cluon::serializeEnvelope(std::move(env));
+                        std::cout.flush();
                     }
                 }
             }
@@ -97,9 +121,21 @@ int32_t main(int32_t argc, char **argv) {
                             msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                        [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                        []() {});
-                            std::cout << sstr.str() << std::endl;
+                            std::clog << sstr.str() << std::endl;
                         }
                         //od4.send(msg, ts, ID);
+                        cluon::data::Envelope env;
+                        env.senderStamp(ID)
+                           .sent(ts)
+                           .received(ts)
+                           .sampleTimeStamp(ts);
+                        cluon::ToProtoVisitor proto;
+            
+                        env.dataType(msg.ID());
+                        msg.accept(proto);
+                        env.serializedData(proto.encodedData());
+                        std::cout << cluon::serializeEnvelope(std::move(env));
+                        std::cout.flush();
                     }
 
                     const float mG_to_mps2{9.80665f/1000.f};
@@ -115,9 +151,21 @@ int32_t main(int32_t argc, char **argv) {
                             msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                        [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                        []() {});
-                            std::cout << sstr.str() << std::endl;
+                            std::clog << sstr.str() << std::endl;
                         }
                         //od4.send(msg, ts, ID);
+                        cluon::data::Envelope env;
+                        env.senderStamp(ID)
+                           .sent(ts)
+                           .received(ts)
+                           .sampleTimeStamp(ts);
+                        cluon::ToProtoVisitor proto;
+            
+                        env.dataType(msg.ID());
+                        msg.accept(proto);
+                        env.serializedData(proto.encodedData());
+                        std::cout << cluon::serializeEnvelope(std::move(env));
+                        std::cout.flush();
                     }
 
                     {
@@ -130,9 +178,21 @@ int32_t main(int32_t argc, char **argv) {
                             msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                        [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                        []() {});
-                            std::cout << sstr.str() << std::endl;
+                            std::clog << sstr.str() << std::endl;
                         }
                         //od4.send(msg, ts, ID);
+                        cluon::data::Envelope env;
+                        env.senderStamp(ID)
+                           .sent(ts)
+                           .received(ts)
+                           .sampleTimeStamp(ts);
+                        cluon::ToProtoVisitor proto;
+            
+                        env.dataType(msg.ID());
+                        msg.accept(proto);
+                        env.serializedData(proto.encodedData());
+                        std::cout << cluon::serializeEnvelope(std::move(env));
+                        std::cout.flush();
                     }
                 }
             }
@@ -149,9 +209,21 @@ int32_t main(int32_t argc, char **argv) {
                         msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msg, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msg.ID());
+                    msg.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_L3_GD20_ROTATION_A_FRAME_ID == canFrameID) {
@@ -165,7 +237,7 @@ int32_t main(int32_t argc, char **argv) {
                         msgAVR.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     // Will be sent when Z is in.
                     //od4.send(msgAVR, ts, ID);
@@ -181,9 +253,21 @@ int32_t main(int32_t argc, char **argv) {
                         msgAVR.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msgAVR, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msgAVR.ID());
+                    msgAVR.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_GPS_POSITION_LATITUDE_FRAME_ID == canFrameID) {
@@ -204,7 +288,7 @@ int32_t main(int32_t argc, char **argv) {
                         msgWGS84R.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     // Will be sent when longitude is in.
                     //od4.send(msgWGS84R, ts, ID);
@@ -228,9 +312,21 @@ int32_t main(int32_t argc, char **argv) {
                         msgWGS84R.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msgWGS84R, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msgWGS84R.ID());
+                    msgWGS84R.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_GPS_POSITION_ALTITUDE_FRAME_ID == canFrameID) {
@@ -243,9 +339,21 @@ int32_t main(int32_t argc, char **argv) {
                         msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msg, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msg.ID());
+                    msg.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_GPS_DELUSIONS_A_FRAME_ID == canFrameID) {
@@ -259,7 +367,7 @@ int32_t main(int32_t argc, char **argv) {
                         msgDelusion.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     // Will be sent when delusion frame B is in.
                     //od4.send(msgDelusion, ts, ID);
@@ -275,9 +383,21 @@ int32_t main(int32_t argc, char **argv) {
                         msgDelusion.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msgDelusion, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msgDelusion.ID());
+                    msgDelusion.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_GPS_STATUS_FRAME_ID == canFrameID) {
@@ -292,9 +412,21 @@ int32_t main(int32_t argc, char **argv) {
                         msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msg, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msg.ID());
+                    msg.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_IO_FRAME_ID == canFrameID) {
@@ -312,9 +444,21 @@ int32_t main(int32_t argc, char **argv) {
                         msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msg, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msg.ID());
+                    msg.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_RTC_DATE_TIME_FRAME_ID == canFrameID) {
@@ -333,9 +477,21 @@ int32_t main(int32_t argc, char **argv) {
                         msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msg, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msg.ID());
+                    msg.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
             else if (PEAK_CAN_GPS_DATE_TIME_FRAME_ID == canFrameID) {
@@ -353,67 +509,85 @@ int32_t main(int32_t argc, char **argv) {
                         msg.accept([](uint32_t, const std::string &, const std::string &) {},
                                    [&sstr](uint32_t, std::string &&, std::string &&n, auto v) { sstr << n << " = " << v << '\n'; },
                                    []() {});
-                        std::cout << sstr.str() << std::endl;
+                        std::clog << sstr.str() << std::endl;
                     }
                     //od4.send(msg, ts, ID);
+                    cluon::data::Envelope env;
+                    env.senderStamp(ID)
+                       .sent(ts)
+                       .received(ts)
+                       .sampleTimeStamp(ts);
+                    cluon::ToProtoVisitor proto;
+            
+                    env.dataType(msg.ID());
+                    msg.accept(proto);
+                    env.serializedData(proto.encodedData());
+                    std::cout << cluon::serializeEnvelope(std::move(env));
+                    std::cout.flush();
                 }
             }
 
         };
 
+        // Read from STDIN
         do {
             std::string line;
             std::getline(std::cin, line);
             if (line.length() > 0) {
                 std::vector<std::string> tokens = stringtoolbox::split(line, ' ');
-                std::string time = stringtoolbox::split(tokens.at(0).substr(1), ')').at(0);
 
-                std::string frameID = stringtoolbox::split(tokens.at(2), '#').at(0);
+                // Timestamp.
+                cluon::data::TimeStamp ts;
+                {
+                    std::string time = stringtoolbox::split(tokens.at(0).substr(1), ')').at(0);
+                    std::string time_s = stringtoolbox::split(time, '.').at(0);
+                    std::string time_mics = stringtoolbox::split(time, '.').at(1);
+                    int64_t s = std::stoll(time_s);
+                    int64_t mics = std::stoll(time_mics);
+                    ts = cluon::time::fromMicroseconds(s * static_cast<int64_t>(1000*1000) + mics);
+                }
+
+                // FrameID.
+                uint16_t ui_frameID = 0;
+                {
+                    std::string frameID = stringtoolbox::split(tokens.at(2), '#').at(0);
+                    std::stringstream sstrFrameID;
+                    sstrFrameID << std::hex << frameID;
+                    sstrFrameID >> ui_frameID;
+                }
 
                 // Flip CAN data.
-                std::string rdata = stringtoolbox::split(tokens.at(2), '#').at(1);
-                uint8_t len = rdata.length();
-
-                std::vector<char> __data;
-                __data.resize(len);
-                int i = len;
-                int j = 0;
-                for(; i >= 2; i-=2) {
-                  __data[j] = rdata[i-2];
-                  __data[j+1] = rdata[i-1];
-                  j+=2;
-                }
-                const std::string data(__data.begin(), __data.end());
-
-                std::stringstream sstrData;
-                sstrData << std::hex << data;
-
+                uint8_t len = 0;
                 union _data {
                   uint64_t u64 = 0;
                   uint8_t b8[sizeof(uint64_t)];
                 } ui_data;
-                sstrData >> ui_data.u64;
+                {
+                    std::string rdata = stringtoolbox::split(tokens.at(2), '#').at(1);
+                    len = rdata.length();
 
-                uint16_t ui_frameID = 0;
-                std::stringstream sstrFrameID;
-                sstrFrameID << std::hex << frameID;
-                sstrFrameID >> ui_frameID;
+                    std::vector<char> __data;
+                    __data.resize(len);
+                    int i = len;
+                    int j = 0;
+                    for(; i >= 2; i-=2) {
+                      __data[j] = rdata[i-2];
+                      __data[j+1] = rdata[i-1];
+                      j+=2;
+                    }
+                    const std::string data(__data.begin(), __data.end());
 
-                std::cout << time << ": r=" << rdata << ", d=" << data<< ", " << ui_frameID << ":" << ui_data.u64 << ", " << +len << std::endl;
+                    std::stringstream sstrData;
+                    sstrData << std::hex << data;
 
-        //auto decode = [VERBOSE, &msgAVRMutex, &msgAVR, &msgWGS84RMutex, &msgDelusionMutex, &msgDelusion, &msgWGS84R](cluon::data::TimeStamp ts, uint16_t canFrameID, uint8_t *src, uint8_t len) {
-                cluon::data::TimeStamp ts;
+                    sstrData >> ui_data.u64;
+                }
+
+                //std::clog << ts.seconds() << "/" << ts.microseconds() << ", ID = " << ui_frameID << ":" << ui_data.u64 << ", " << +len << std::endl;
+
                 decode(ts, ui_frameID, ui_data.b8, len/2);
             }
         } while (std::cin.good());
-
-/*
-                    cluon::data::TimeStamp sampleTimeStamp;
-                    sampleTimeStamp.seconds(socketTimeStamp.tv_sec)
-                                   .microseconds(socketTimeStamp.tv_usec);
-*/
-            //        decode(sampleTimeStamp, frame.can_id, frame.data, frame.can_dlc);
-
         retCode = 0;
     }
     return retCode;
